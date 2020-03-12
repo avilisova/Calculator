@@ -22,16 +22,15 @@ class MainActivity : AppCompatActivity() {
     fun calc(view : View) {
         val expression = findViewById<TextView> (R.id.etExpression)
         val str = expression.text.toString()
-        //var str : String = "-5.1 + ((1 + 4) - (2 * 3))"
         val resultText = findViewById<TextView> (R.id.tvResult)
 
         if (str != null && checkInputString(str)) {
             val preparedStr = this.prepareInputString(str)
              try {
-                 val e = CalcExpression(preparedStr)
-                 var calcResult = e.getCalcResult()
+                 //val e = CalcExpression(preparedStr)
+                 var calcResult = Calculation.calc(preparedStr)
                  if (calcResult!= null) {
-                     resultText.text = calcResult.toString()
+                     resultText.text = calcResult//.toString()
                  }
              }
              catch (e : IllegalArgumentException)

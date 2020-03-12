@@ -1,15 +1,12 @@
 package com.example.calculator
 
-open class CalcExpression (private val expressionStr : String, open var result : Double? = null) {
-    protected val operations: Array<Operation> =
-        arrayOf(MultiplyOperation(), DivideOperation(), PlusOperation(), MinusOperation())
-    private val operation : Operation? = this.chooseOperation(expressionStr)
-    //private var result : Double? = null
 
-    private fun transformToList(): /*ArrayList<String> {*/ ArrayList<CalcExpression> {
-        val str = this.expressionStr
-        var items = ArrayList<CalcExpression>()
-        //var items = ArrayList<String>()
+object Calculation {
+    private val operations: Array<Operation> =
+        arrayOf(MultiplyOperation(), DivideOperation(), PlusOperation(), MinusOperation())
+
+    private fun transformToList(str : String): ArrayList<Expression> {
+        var items = ArrayList<Expression>()
 
         var startPos = 0
         var endPos = 0
@@ -21,42 +18,38 @@ open class CalcExpression (private val expressionStr : String, open var result :
                     val substr = str.substring(endPos + 1, indexOfClosingBracket)
                     endPos = indexOfClosingBracket + 1
                     startPos = endPos
-                    items.add(CalcExpression(substr))
-                    //items.add(substr)
+                    items.add(SimpleExpression(this.calc(substr)))
                 }
                 this.operations.any {e -> e.strOperation == strSymbol} -> {
                     val substr = str.substring(startPos, endPos)
                     if (substr != "") {
-                        var s = SimpleExpression(substr, substr.toDouble())
-                        items.add(s)
-                        //items.add(SimpleExpression(substr, substr.toDouble()))
-                        //items.add(substr)
+                        items.add(SimpleExpression(substr))
                     }
-                    items.add(OperationExpression(strSymbol))
-                    //items.add(strSymbol)
+                    items.add(OperationExpression(strSymbol, chooseOperation(strSymbol)))
                     startPos = endPos + 1
                     endPos = startPos
+                }
+                strSymbol == ")" -> {
+                    throw IllegalArgumentException("Некорректная расстановка скобок - нет открывающей: $str")
                 }
                 else -> endPos++
             }
         }
-
         if (startPos < str.length) {
             val substr = str.substring(startPos, str.length)
-            items.add(SimpleExpression(substr, substr.toDouble()))
-            //items.add(substr)
+            items.add(SimpleExpression(substr))
         }
         return items
     }
 
-    private fun calc() {
-       var items = this.transformToList()
+    fun calc(str : String) : String {
+        var items = this.transformToList(str)
 
-       var pos: Int
+        var pos: Int
         for (priority in 0..1) {
             pos = 0
             while (pos != -1) {
-                pos = items.indexOfFirst { e -> (e.operation != null && e.operation.priority == priority)}
+                pos = items.indexOfFirst { e -> (e.operation != null && e.operation?.priority == priority)}
                 if (pos != -1) {
                     val operand1 = items[pos - 1].getCalcResult()
                     val operand2 = items[pos + 1].getCalcResult()
@@ -69,41 +62,27 @@ open class CalcExpression (private val expressionStr : String, open var result :
                             operand2
                         )
 
-                        items[pos - 1] = SimpleExpression(newElement.toString(), newElement)
+                        items[pos - 1] = SimpleExpression(newElement.toString())
                         items.removeAt(pos)
                         items.removeAt(pos)
                     }
                 }
             }
         }
-
-        this.result = items[0].getCalcResult()
-        //this.result = 0.0
-    }
-
-
-    open fun getCalcResult(): Double? {
-        if (this.result == null) {
-            this.calc()
-            if (this.result == null) {
-                //println("Не удалось вычислить выражение " + this.expressionStr)
-                throw java.lang.IllegalArgumentException("Не удалось вычислить выражение " + this.expressionStr)
-            }
-        }
-        return this.result
-    }
-
-    override fun toString(): String {
-        return this.expressionStr
+        return items[0].toString()
     }
 
     private fun indexOfClosingBracket(str : String, pos : Int) : Int {
         var cnt = 0
         var bracketPos = 0
         var i = str.indexOf("(", pos)
-        if (i > str.indexOf(")", pos)){
+        var iClosing = str.indexOf(")", pos)
+        if (iClosing == -1)
+        {
+            throw IllegalArgumentException("Некорректная расстановка скобок - нет закрывающей: $str")
+        }
+        else if (i > iClosing ){
             throw IllegalArgumentException("Некорректная расстановка скобок - нет открывающей: $str")
-
         }
         while (bracketPos == 0) {
             if (str[i] == '(') {
@@ -127,8 +106,8 @@ open class CalcExpression (private val expressionStr : String, open var result :
         return bracketPos
     }
 
-    open fun chooseOperation(str : String) : Operation? {
-        return null
+    private fun chooseOperation(str : String) : Operation? {
+        return this.operations.getOrNull( this.operations.indexOfFirst{e -> e.strOperation == str})
     }
 }
 

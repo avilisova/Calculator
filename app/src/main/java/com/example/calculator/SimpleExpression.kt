@@ -1,6 +1,6 @@
 package com.example.calculator
 
-class SimpleExpression(private val expressionStr : String, override var result : Double? = null) : CalcExpression(expressionStr, result)
+class SimpleExpression(override val expressionStr : String/*, override var result : Double? = null*/) : Expression(expressionStr, null)
 {
     override fun getCalcResult() : Double?
     {

@@ -46,10 +46,10 @@ class DivideOperation : Operation ("/", 0)
     override fun executeOperation(x : Double?, y : Double?) : Double?
     {
         if (x != null && y != null) {
-            try {
+            if (y != 0.0) {
                 return x / y
             }
-            catch (e : ArithmeticException)
+            else
             {
                 throw IllegalArgumentException("Попытка деления на 0: $x / $y")
             }
